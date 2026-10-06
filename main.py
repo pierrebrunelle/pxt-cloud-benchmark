@@ -106,6 +106,9 @@ async def persist_clip(clip: UploadFile = File(...), title: str = Form(...)):
     stream = container.streams.video[0]
     container.seek(500000, stream=stream)
     frame_image = next((frame.to_image() for frame in container.decode(video=0)), None)
+    if frame_image is None:  # the clip is shorter than the seek; take the first frame, as /clip does
+        container.seek(0)
+        frame_image = next((frame.to_image() for frame in container.decode(video=0)), None)
     thumb = io.BytesIO()
     frame_image.resize((256, 144)).save(thumb, format="JPEG")
     video_key, thumb_key = f"videos/{clip_id}.mpg", f"thumbs/{clip_id}.jpg"
